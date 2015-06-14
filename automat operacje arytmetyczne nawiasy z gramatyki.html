@@ -1,0 +1,137 @@
+<html>
+	<head>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<meta charset="UTF-8">
+	</head>
+	<body style="width:50%; margin:0 auto; padding-top:25px;">
+		<h1>Automat deterministyczny</h1>
+		<h4>Operacje arytmetyczne, liczby po przecinku, nawiasy</h4>
+		<textarea class="form-control" rows="3" id="dzialanie">3.4+(5/8.2)*11^4;</textarea>
+		<br>
+		<button type="submit" class="btn btn-primary" onclick="sprawdz()">Sprawdź</button> 
+		<a id="wynik" style="font-weight:bold;"></a>
+		<br><br>
+
+		<div class="panel panel-info" id="panel">
+			<div class="panel-heading">Przejścia</div>
+			<div class="panel-body" id="przejscia">
+				...
+			</div>
+		</div>
+
+		<script>
+			$(document).ready(function(){
+				$('#dzialanie').keyup(function(){
+						_("panel").className = "panel panel-info";
+						_("przejscia").innerHTML = "";
+						_("wynik").innerHTML = "";
+					});
+			});
+			function sprawdz(){
+				_("przejscia").innerHTML = "";
+				_("wynik").innerHTML = "";
+				
+				//nazwa stanu 0
+				//cyfra 	-> 1
+				//.			-> 2
+				//;			-> 3
+				//+-/*		-> 4
+				//(			-> 5
+				//)			-> 6
+				//pusty		-> 7
+				
+				//sp 0 s1 1 s2 2 s3 3 s4 4 sn1 5 sn2 6 sn3 7 sn4 8 sn5 9 sk 10
+				//11 = błąd niepoprawne wyrażenie;
+				
+				var aktualnyStan = 0;
+				var tablicaStanow = [];
+				///////////////////[nazw, 0,. ,; ,+-,( ,) ,$ ]
+				tablicaStanow[0] = [ "SP", 1,11,11,11, 5,11,11];
+				tablicaStanow[1] = [ "S1", 1, 2, 4, 0,11,11,11];
+				tablicaStanow[2] = [ "S2", 3,11,11,11,11,11,11];
+				tablicaStanow[3] = [ "S3", 3,11, 4, 0,11,11,11];
+				tablicaStanow[4] = [ "S4", 1,11,11,11, 5,11,10];
+				tablicaStanow[5] = ["SN1", 6,11,11,11,11,11,11];
+				tablicaStanow[6] = ["SN2", 6, 7,11, 5,11, 9,11];
+				tablicaStanow[7] = ["SN3", 8,11,11,11,11,11,11];
+				tablicaStanow[8] = ["SN4", 8,11,11, 5,11, 9,11];
+				tablicaStanow[9] = ["SN5",11,11, 4, 0,11,11,11];
+				tablicaStanow[10]= [ "SK",10,10,10,10,10,10,10];
+				
+				
+				
+				for (var i = 0; i <= _("dzialanie").value.length; i++){
+					_("przejscia").innerHTML += i+": "+tablicaStanow[aktualnyStan][0];
+				
+					//jeżeli to nie jest koniec znaków
+					if (i != _("dzialanie").value .length){
+						var z = _("dzialanie").value[i];
+						if (isDigit(z)){
+							_("przejscia").innerHTML += " --> cyfra ";
+							aktualnyStan = tablicaStanow[aktualnyStan][1];
+						}
+						else if (z == "."){
+							_("przejscia").innerHTML += " --> kropka ";
+							aktualnyStan = tablicaStanow[aktualnyStan][2];
+						}
+						else if (z == ";"){
+							_("przejscia").innerHTML += " --> średnik ";
+							aktualnyStan = tablicaStanow[aktualnyStan][3];
+						}
+						else if (z == "+" || z == "-" || z == "/" || z == "*" || z == "^"){
+							_("przejscia").innerHTML += " --> operator ";
+							aktualnyStan = tablicaStanow[aktualnyStan][4];
+						}
+						else if (z == "("){
+							_("przejscia").innerHTML += " --> nawias otwierający ";
+							aktualnyStan = tablicaStanow[aktualnyStan][5];
+						}
+						else if (z == ")"){
+							_("przejscia").innerHTML += " --> nawias zamykający ";
+							aktualnyStan = tablicaStanow[aktualnyStan][6];
+						}
+						else {
+							_("przejscia").innerHTML += " --> NIEZNANY ZNAK ";
+							aktualnyStan = 11;
+						}
+					}
+					//jeżeli znaki się zakończyły symuluje symbol pusty
+					else{
+						_("przejscia").innerHTML += " --> symbol pusty ";
+						aktualnyStan = tablicaStanow[aktualnyStan][7];
+					}
+					
+					if (aktualnyStan == 11 ){
+						_("przejscia").innerHTML += " --> NIEPOPRAWNE DZIAŁANIE";
+						break;
+					}
+					_("przejscia").innerHTML += " --> "+tablicaStanow[aktualnyStan][0]+"<br>";
+					
+				}
+
+				if (aktualnyStan == 10 ){
+					_("wynik").innerHTML += " Działanie poprawne";
+					document.getElementById("panel").className = "panel panel-success";
+				}else{
+					_("wynik").innerHTML += " Działanie niepoprawne";
+					document.getElementById("panel").className = "panel panel-danger";
+				}
+			}
+			var isDigit = (function() {
+			  var re = /^\d$/;
+			  return function(c) {
+				return re.test(c);
+			  }
+			}());
+
+			function _(obiekt){
+				return document.getElementById(obiekt);
+			}
+
+
+		</script>
+	</body>
+</html>
